@@ -1,8 +1,8 @@
 :root {
   --vue3-org-chart-container-height: 70vh;
-  --vue3-org-chart-line-top: .5rem;
-  --vue3-org-chart-line-bottom: .5rem;
-  --vue3-org-chart-node-space-x: .5rem;
+  --vue3-org-chart-line-top: 0.5rem;
+  --vue3-org-chart-line-bottom: 0.5rem;
+  --vue3-org-chart-node-space-x: 0.5rem;
   --vue3-org-chart-line-color: #e1e1e1;
 }
 
@@ -27,7 +27,9 @@
   }
 
   .vue3-org-chart-node-element {
-    margin: var(--vue3-org-chart-line-top) calc(var(--vue3-org-chart-node-space-x) / 2) var(--vue3-org-chart-line-bottom);
+    margin: var(--vue3-org-chart-line-top)
+      calc(var(--vue3-org-chart-node-space-x) / 2)
+      var(--vue3-org-chart-line-bottom);
     display: inline-block;
     width: min-content;
   }
@@ -56,7 +58,7 @@
     width: 100%;
 
     &.left::before {
-      content: "";
+      content: '';
       display: block;
       width: 50%;
       border-top: 1px solid var(--vue3-org-chart-line-color);
@@ -65,7 +67,7 @@
     }
 
     &.right::after {
-      content: "";
+      content: '';
       display: block;
       width: 50%;
       border-top: 1px solid var(--vue3-org-chart-line-color);
@@ -88,14 +90,14 @@
 
     .vue3-org-chart-minimap-scene {
       position: absolute;
-      background-color: rgba(255, 255, 255, 0.30);
+      background-color: rgba(255, 255, 255, 0.3);
       border: 1px solid #ff8c8c;
       pointer-events: none;
     }
 
     .vue3-org-chart-minimap-container {
       position: absolute;
-      background-color: rgba(255, 255, 255, 0.30);
+      background-color: rgba(255, 255, 255, 0.3);
       border: 1px solid #8ee5f8;
       pointer-events: none;
     }
@@ -107,7 +109,7 @@
 
   .nodeTransition-leave-to {
     opacity: 0;
-    scale: 0.20;
+    scale: 0.2;
   }
 
   .nodeTransition-enter-active {
@@ -115,6 +117,6 @@
   }
 
   .nodeTransition-enter-from {
-    scale: 0.70;
+    scale: 0.7;
   }
 }

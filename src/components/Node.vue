@@ -1,73 +1,79 @@
-<script setup lang="ts">
-import type {IApi, INode, INodeScopeParams} from '@/utils/types';
-import {ref, inject, onMounted, computed, nextTick} from 'vue';
+<script setup lang="ts" generic="T extends INode">
+import type { Ref, VNode } from 'vue';
+import type { INode, NodeData, NodeSlotParams, NodeState } from '../types';
 
-// props
-const props = defineProps({
-  id: {type: String, required: true},
-});
+const { nodeId, nodesData, getState, setState } = defineProps<{
+  nodeId: string;
+  nodesData: Map<string, NodeData<T>>;
+  getState: (id: string) => Ref<NodeState> | undefined;
+  setState: (id: string, state: Partial<NodeState>) => void;
+}>();
 
-// element reference
-const element = ref(null);
+defineSlots<{
+  topBorder: () => VNode[];
+  node: (params: NodeSlotParams<T>) => VNode[];
+}>();
 
-// api instance
-const api = inject('api') as IApi;
+const nodeData = nodesData.get(nodeId)!;
 
-// get item and children
-const item: INode = api.find(props.id);
+const { children, data } = nodeData;
 
-// open/close children
-const open = computed(() => item.__open || false);
-
-const children = api.findChildren(props.id);
-
-onMounted(() => {
-  if (!item.parentId) {
-    api.$root.value = element.value;
-    nextTick(() => {
-      api.zoomReset();
-    });
-
-    item.__open = true; // root is opening children
-    // children.forEach((item) => {
-    //   item.__open = true;
-    // });
-  }
-});
+const state = getState(nodeId)!;
 
 // toggle visibility of children
 const toggleChildren = () => {
-  if (!children.length) {
-    return
-  }
-
-  item.__open = !open.value;
-  api.goToHome(element.value);
+  setState(nodeId, { childrenExpanded: !state.value.childrenExpanded });
 };
 </script>
 
 <template>
   <div class="vue3-org-chart-node">
-    <slot name="top-border"/>
-    <div class="vue3-org-chart-node-element" ref="element">
-      <div v-if="item.parentId" class="vue3-org-chart-node-element-top-line"></div>
-      <div tabindex="0" @keydown.self.space.prevent="api.goToHome(element)">
-        <slot name="node" :item="item" :children="children" :open="open" :toggleChildren="toggleChildren"/>
+    <slot name="topBorder"></slot>
+    <div
+      ref="element"
+      class="vue3-org-chart-node-element">
+      <div
+        v-if="data.parentId"
+        class="vue3-org-chart-node-element-top-line"></div>
+      <div tabindex="0">
+        <!-- prettier-ignore-attribute -->
+        <slot
+          name="node"
+          :item="(data as T)"
+          :children="children"
+          :children-expanded="state.childrenExpanded"
+          :toggle-children="toggleChildren">
+        </slot>
       </div>
-      <div v-if="children.length && open" class="vue3-org-chart-node-element-bottom-line"></div>
+      <div
+        v-if="children.length && state.childrenExpanded"
+        class="vue3-org-chart-node-element-bottom-line"></div>
     </div>
 
     <Transition name="nodeTransition">
-      <div class="vue3-org-chart-node-container" v-if="children.length && open">
-        <Node v-for="(node, index) in children" :key="node.id" :id="node.id" ref="nodeRefs">
-          <template #top-border>
-            <div class="vue3-org-chart-node-element-horizontal-line" :class="{
-              'left' : open && index !== 0,
-              'right' : open && index !== children.length - 1,
-            }"></div>
+      <div
+        v-if="children.length && state.childrenExpanded"
+        class="vue3-org-chart-node-container">
+        <Node
+          v-for="(id, index) in children"
+          :key="id"
+          :node-id="id"
+          :nodes-data="nodesData"
+          :get-state="getState"
+          :set-state="setState">
+          <template #topBorder>
+            <div
+              class="vue3-org-chart-node-element-horizontal-line"
+              :class="{
+                left: index !== 0,
+                right: index !== children.length - 1,
+              }"></div>
           </template>
-          <template #node="params:INodeScopeParams">
-            <slot name="node" v-bind="params"/>
+          <template #node="params">
+            <slot
+              name="node"
+              v-bind="params">
+            </slot>
           </template>
         </Node>
       </div>

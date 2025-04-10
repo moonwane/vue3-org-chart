@@ -1,60 +1,92 @@
 <template>
-  <div class="wrapper"
-       style="--vue3-org-chart-line-color:pink">
+  <div
+    class="wrapper"
+    style="--vue3-org-chart-line-color: pink">
+    <button @click="orgChartRef?.resetZoom">Reset Zoom</button>
+    <button @click="orgChartRef?.zoomIn">Zoom In</button>
+    <button @click="orgChartRef?.zoomOut">Zoom Out</button>
+    <button @click="orgChartRef?.expandAll">Expand All</button>
+    <button @click="orgChartRef?.collapseAll">Collapse All</button>
+    <button @click="minimap = !minimap">Toggle Minimap</button>
 
-    <button @click="vocApi.zoomReset">Reset Zoom</button>
-    <button @click="vocApi.zoomIn">Zoom In</button>
-    <button @click="vocApi.zoomOut">Zoom Out</button>
-    <button @click="vocApi.expandAll">Expand All</button>
-    <button @click="vocApi.collapseAll">Collapse All</button>
-    <button @click="vocApi.minimap.toggle">Toggle Minimap</button>
-
-    <div style="border: 1px solid #e8e8e8; background: white; border-radius: 8px; min-height: 70vh">
-      <vue3-org-chart minimap
-                      @on-ready="initVue3OrgChart"
-                      json="https://raw.githubusercontent.com/bumbeishvili/sample-data/main/sample.json">
-        <template #node="{item, children, open, toggleChildren}">
-          <div class="node-item" :class="{'active': open, 'passive' : !open }">
+    <div
+      style="
+        border: 1px solid #e8e8e8;
+        background: white;
+        border-radius: 8px;
+        min-height: 70vh;
+      ">
+      <OrgChart
+        ref="orgChartRef"
+        :data="data"
+        :minimap="minimap">
+        <template #node="{ item, children, childrenExpanded, toggleChildren }">
+          <div
+            class="node-item"
+            :class="{ active: childrenExpanded, passive: !childrenExpanded }">
             <div>
-              <img v-if="item.imageUrl" class="avatar" :src="item.imageUrl" alt="avatar">
+              <img
+                v-if="item.imageUrl"
+                class="avatar"
+                :src="item.imageUrl"
+                alt="avatar" />
             </div>
             <div>
-              <div>{{ item.id }} ({{ children.length }})</div>
+              <div>{{ item.id }} ({{ children?.length }})</div>
               <div>{{ item.name }}</div>
             </div>
           </div>
-          <div style="text-align: center;">
-            <button class="node-btn-toggle" v-if="children.length" @click="toggleChildren" @touchend="toggleChildren">
-              {{ open ? '-' : '+' }}
+          <div style="text-align: center">
+            <button
+              v-if="children?.length"
+              class="node-btn-toggle"
+              @click="toggleChildren"
+              @touchend="toggleChildren">
+              {{ childrenExpanded ? '-' : '+' }}
             </button>
           </div>
         </template>
 
-        <template #no-data>
-          <div style="color:blue; text-align: center;">
-            No data
-          </div>
+        <template #noData>
+          <div style="color: blue; text-align: center">No data</div>
         </template>
-      </vue3-org-chart>
+      </OrgChart>
     </div>
   </div>
 </template>
 
-<script setup>
-import {ref} from "vue";
-// alternative way to import, it is already imported in main.ts
-// import {Vue3OrgChart} from "../dist/vue3-org-chart.js";
-// import "../dist/style.css";
+<script setup lang="ts">
+import { ref, useTemplateRef } from 'vue';
+import { OrgChart } from '../dist/vue3-org-chart';
+import '../dist/vue3-org-chart.css';
 
-const vocApi = ref(null);
-
-// this function will be called when vue3-org-chart is ready
-// it will pass api object as argument
-// api object contains reset function and some other functions will be added in future
-const initVue3OrgChart = ({api}) => {
-  vocApi.value = api;
+interface Data {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  area?: string;
+  profileUrl?: string;
+  office?: string;
+  tags?: string;
+  isLoggedUser?: boolean;
+  positionName?: string;
+  parentId?: string;
+  size?: string;
 }
 
+const dataUrl =
+  'https://raw.githubusercontent.com/bumbeishvili/sample-data/main/sample.json';
+
+const data = ref<Data[]>([]);
+const minimap = ref(false);
+const orgChartRef = useTemplateRef('orgChartRef');
+
+const fetchData = async () => {
+  const res = await fetch(dataUrl);
+  data.value = (await res.json()) as Data[];
+};
+
+fetchData();
 </script>
 
 <style>
@@ -101,7 +133,7 @@ body {
 }
 
 .node-item.passive {
-  background-color: rgb(248 250 252)
+  background-color: rgb(248 250 252);
 }
 
 .node-item .avatar {
@@ -120,5 +152,4 @@ body {
   font-size: 0.75rem;
   line-height: 10px;
 }
-
 </style>
